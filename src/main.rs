@@ -1,12 +1,12 @@
-mod config;
-mod snapshot_prefetcher;
 mod blockstream_optimizer;
-mod rpc_cache_layer;
-mod metrics;
+mod config;
 mod config_autotuner;
+mod metrics;
+mod rpc_cache_layer;
+mod snapshot_prefetcher;
 
-use config::AppConfig;
 use clap::Parser;
+use config::AppConfig;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -26,4 +26,3 @@ async fn main() -> anyhow::Result<()> {
 
     Ok(())
 }
-

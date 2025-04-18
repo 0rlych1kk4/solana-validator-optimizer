@@ -1,7 +1,17 @@
 [package]
 name = "solana-validator-optimizer"
-version = "0.1.0"
-edition = "2024"
+version = "1.0.0"
+edition = "2021" # crates.io only accepts stable editions
+
+description = "Optimized Solana validator tool with snapshot prefetching, RPC caching, and Prometheus metrics."
+authors = ["Orlando D. Trajano <orlychikka@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/0rlych1kk4/solana-validator-optimizer"
+repository = "https://github.com/0rlych1kk4/solana-validator-optimizer"
+documentation = "https://docs.rs/solana-validator-optimizer"
+keywords = ["solana", "validator", "rpc", "prometheus", "metrics"]
+categories = ["command-line-utilities", "network-programming", "cryptography"]
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
@@ -21,4 +31,7 @@ env_logger = "0.11"
 anyhow = "1.0"
 sha2 = "0.10"
 futures-util = "0.3"
+axum = "0.7"
+once_cell = "1.19"
+hyper = { version = "1", features = ["full"] }
 

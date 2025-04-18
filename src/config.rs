@@ -19,4 +19,3 @@ impl AppConfig {
             .try_deserialize()
     }
 }
-
