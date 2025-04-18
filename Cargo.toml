@@ -1,0 +1,24 @@
+[package]
+name = "solana-validator-optimizer"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+reqwest = { version = "0.11", features = ["json", "gzip", "stream"] }
+clap = { version = "4.0", features = ["derive"] }
+lru = "0.10"
+prometheus = "0.13"
+rayon = "1.7"
+solana-client = "1.18"
+solana-sdk = "1.18"
+solana-ledger = "1.18"
+config = "0.13"
+log = "0.4"
+env_logger = "0.11"
+anyhow = "1.0"
+sha2 = "0.10"
+futures-util = "0.3"
+

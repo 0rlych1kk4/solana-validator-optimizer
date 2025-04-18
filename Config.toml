@@ -1,0 +1,6 @@
+snapshot_url = "https://solana.snapshot.stakeconomy.com/snapshot-latest.tar.zst"
+snapshot_sha256 = ""  # Optional
+rpc_url = "http://127.0.0.1:8899"
+metrics_port = 9090
+cache_size = 128
+
