@@ -1,5 +1,7 @@
 # solana-validator-optimizer
 
+[![Release](https://img.shields.io/github/v/release/0rlych1kk4/solana-validator-optimizer?display_name=tag)](https://github.com/0rlych1kk4/solana-validator-optimizer/releases)
+
 > A production-grade Rust tool to enhance the performance of Solana validator nodes by reducing sync latency and improving RPC responsiveness.
 
 ---
