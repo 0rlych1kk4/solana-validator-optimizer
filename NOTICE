@@ -1,0 +1,17 @@
+NOTICE
+
+Solana Validator Optimizer
+Copyright (c) 2024 Orlando D. Trajano
+
+This software is developed and maintained by Orlando D. Trajano.
+
+All rights reserved.
+
+This product includes code written for the purpose of optimizing the performance of Solana validator nodes, including snapshot prefetching, RPC caching, and Prometheus-based observability.
+
+The software is licensed under the MIT License. You may obtain a copy of the License at:
+
+https://opensource.org/licenses/MIT
+
+Any redistribution of this software must retain this NOTICE file and the original LICENSE.
+
