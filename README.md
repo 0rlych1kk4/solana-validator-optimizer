@@ -23,4 +23,5 @@ Ideal for:
 
 ##  Architecture
 
+![Architecture Overview](docs/architecture.png)
 
