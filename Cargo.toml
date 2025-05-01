@@ -1,6 +1,6 @@
 [package]
 name = "solana-validator-optimizer"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021" # crates.io only accepts stable editions
 
 description = "Optimized Solana validator tool with snapshot prefetching, RPC caching, and Prometheus metrics."
