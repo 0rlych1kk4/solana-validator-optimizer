@@ -1,0 +1,12 @@
+# Config.toml (example)
+
+# Snapshot settings
+snapshot_url = ""         # e.g. "https://snapshots.myvalidator.com/latest.tar.zst"
+snapshot_sha256 = ""      # optional verification
+
+# RPC & Metrics
+rpc_url = "https://api.mainnet-beta.solana.com"
+metrics_port = 9090
+
+# Cache
+cache_size = 128          # Number of entries in RPC LRU cache
