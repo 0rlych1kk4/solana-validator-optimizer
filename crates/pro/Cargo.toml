@@ -1,0 +1,8 @@
+[package]
+name = "solana-validator-optimizer-pro"
+version = "0.1.0"
+edition = "2021"
+description = "Pro features for solana-validator-optimizer (stub crate for now)"
+
+[dependencies]
+solana-validator-optimizer = { path = "../core" }

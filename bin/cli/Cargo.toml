@@ -1,0 +1,28 @@
+[package]
+name = "solana-validator-optimizer-cli"
+version = "1.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["Orlando D. Trajano <orlychikka@gmail.com>"]
+publish = false
+
+[dependencies]
+# Core functionality (always included)
+solana-validator-optimizer = { path = "../../crates/core" }
+
+# Pro-only enhancements (enabled via `--features pro`)
+solana-validator-optimizer-pro = { path = "../../crates/pro", optional = true }
+
+# CLI dependencies
+clap = { version = "4.0", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
+anyhow = "1.0"
+env_logger = "0.11"
+
+[features]
+# Default build without Pro features
+default = []
+
+# Enables advanced Pro-only functionality
+pro = ["solana-validator-optimizer-pro"]
+
