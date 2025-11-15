@@ -1,6 +1,6 @@
 [package]
 name = "solana-validator-optimizer"
-version = "1.1.1"
+version = "1.2.0"
 edition = "2021"
 description = "Optimized Solana validator tool with snapshot prefetching, RPC caching, and Prometheus metrics."
 authors = ["Orlando D. Trajano <orlychikka@gmail.com>"]
@@ -16,9 +16,9 @@ categories = ["command-line-utilities", "network-programming", "cryptography"]
 name = "solana_validator_optimizer"
 path = "src/lib.rs"
 
-[[bin]]
-name = "solana-validator-optimizer"
-path = "src/main.rs"
+#[[bin]]
+#name = "solana-validator-optimizer"
+#path = "src/main.rs"
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
@@ -29,9 +29,10 @@ clap = { version = "4.0", features = ["derive"] }
 lru = "0.10"
 prometheus = "0.13"
 rayon = "1.7"
-solana-client = "1.18"
-solana-sdk = "1.18"
-solana-ledger = "1.18"
+solana-client = "3.0.0"
+solana-sdk = "3.0.0"
+solana-ledger = "3.0.0"
+solana-commitment-config = "3.0.0"
 config = "0.13"
 log = "0.4"
 env_logger = "0.11"
