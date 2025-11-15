@@ -1,4 +1,5 @@
-# Config.toml (example)
+
+# Config.toml.example
 
 # Snapshot settings
 snapshot_url = ""         # e.g. "https://snapshots.myvalidator.com/latest.tar.zst"
