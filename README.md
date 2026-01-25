@@ -142,4 +142,4 @@ Feel free to open issues, feature requests, or pull requests.
 
 ## License
 
-Licensed under the **Apache-2.0 License**.
+Licensed under the **MIT License**.
