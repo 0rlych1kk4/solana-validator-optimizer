@@ -1,6 +1,9 @@
 use crate::config::AppConfig;
 use once_cell::sync::Lazy;
-use prometheus::{Encoder, IntCounter, TextEncoder};
+use prometheus::IntCounter;
+
+#[cfg(feature = "metrics")]
+use prometheus::{Encoder, TextEncoder};
 
 /// Core metrics — registered globally
 pub static REQUEST_COUNTER: Lazy<IntCounter> = Lazy::new(|| {
