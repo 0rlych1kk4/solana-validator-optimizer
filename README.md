@@ -19,6 +19,16 @@
 - Exposing Prometheus metrics via a `/metrics` endpoint  
 
 ---
+## Compatibility
+
+This project targets the **Solana / Agave v3 validator era**.
+
+- Solana crate line: **3.0.x**
+- Recommended validator line: **v3.0.14 (Mainnet-Beta recommended)**
+- Tested against:
+  - Mainnet RPC: https://api.mainnet-beta.solana.com
+  - solana-test-validator (local)
+---
 
 ## Ideal For
 
@@ -93,7 +103,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-solana-validator-optimizer = "1"
+solana-validator-optimizer = "1.2"
 tokio = { version = "1", features = ["full"] }
 anyhow = "1"
 ```
@@ -101,13 +111,31 @@ anyhow = "1"
 Example usage:
 
 ```rust
-use solana_validator_optimizer::{Optimizer, Config};
+use solana_validator_optimizer::{
+    config::AppConfig,
+    snapshot_prefetcher,
+    rpc_cache_layer,
+    metrics,
+    config_autotuner,
+};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let cfg = Config::from_file("Config.toml")?;
-    let mut optimizer = Optimizer::new(cfg).await?;
-    optimizer.start().await?;
+    // Load configuration from Config.toml and/or OPTIMIZER_* env vars
+    let cfg = AppConfig::load()?;
+
+    // Prefetch snapshot (no-op if snapshot_url is empty)
+    snapshot_prefetcher::run(&cfg).await?;
+
+    // Auto-tune configuration (currently informational)
+    config_autotuner::autotune_config(&cfg).await?;
+
+    // Start background RPC cache workers
+    rpc_cache_layer::start_rpc_cache(&cfg).await?;
+
+    // Start Prometheus metrics server (blocks)
+    metrics::start_metrics_server(&cfg).await?;
+
     Ok(())
 }
 ```
@@ -116,23 +144,42 @@ async fn main() -> anyhow::Result<()> {
 
 ## Environment Variables
 
-You can override any `Config.toml` values using environment variables.
+Any Config.toml value can be overridden using the OPTIMIZER_ prefix.
 
-| Config Key     | Environment Variable        |
-|----------------|------------------------------|
-| snapshot_url   | `OPTIMIZER_SNAPSHOT_URL`    |
-| rpc_url        | `OPTIMIZER_RPC_URL`         |
-| metrics_port   | `OPTIMIZER_METRICS_PORT`    |
-| cache_size     | `OPTIMIZER_CACHE_SIZE`      |
+| Config Key       | Environment Variable        |
+|------------------|-----------------------------|
+| snapshot_url     | `OPTIMIZER_SNAPSHOT_URL`    |
+| snapshot_sha256  | `OPTIMIZER_SNAPSHOT_SHA256` |
+| rpc_url          | `OPTIMIZER_RPC_URL`         |
+| metrics_port     | `OPTIMIZER_METRICS_PORT`    |
+| cache_size       | `OPTIMIZER_CACHE_SIZE`      |
 
 **Example:**
 
 ```bash
-OPTIMIZER_RPC_URL=https://api.mainnet-beta.solana.com OPTIMIZER_CACHE_SIZE=256 cargo run -p solana-validator-optimizer-cli --release
+OPTIMIZER_RPC_URL=https://api.mainnet-beta.solana.com \
+OPTIMIZER_CACHE_SIZE=256 \
+cargo run --release
 ```
-
 ---
+## Operational Metrics
+Prometheus endpoint:
+```bash
+http://<host>:<metrics_port>/metrics
+```
+### Exposed Metrics
 
+- `rpc_requests_total`
+- `rpc_cache_hits_total`
+- `rpc_cache_misses_total`
+
+### Metrics
+Enable Prometheus metrics endpoint:
+```bash
+cargo run -p solana-validator-optimizer-cli --release --features metrics -- --config Config.toml run
+curl -s http://127.0.0.1:9090/metrics | grep rpc_
+```
+---
 ## Contributing
 
 Contributions are welcome!  

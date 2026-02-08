@@ -1,6 +1,15 @@
-snapshot_url = "" # skip for now
-snapshot_sha256 = ""  # Optional
-rpc_url = "https://api.mainnet-beta.solana.com"
-metrics_port = 9090
-cache_size = 128
+# If empty, snapshot download is skipped.
+snapshot_url = ""
 
+# Optional SHA-256 verification for the snapshot.
+# Omit this line unless you have a real SHA-256 value.
+# snapshot_sha256 = "YOUR_SHA256_HEX"
+
+# Solana JSON-RPC endpoint
+rpc_url = "https://api.mainnet-beta.solana.com"
+
+# Prometheus metrics endpoint port (default: 9090 if omitted)
+metrics_port = 9090
+
+# RPC cache size (default: 128 if omitted)
+cache_size = 128

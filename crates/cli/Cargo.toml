@@ -1,0 +1,25 @@
+[package]
+name = "solana-validator-optimizer-cli"
+version = "2.1.0"
+edition = "2021"
+description = "CLI wrapper for solana-validator-optimizer (snapshot prefetch, RPC cache, metrics)."
+license = "MIT"
+repository = "https://github.com/0rlych1kk4/solana-validator-optimizer"
+homepage = "https://github.com/0rlych1kk4/solana-validator-optimizer"
+
+[[bin]]
+name = "svo"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+tokio = { version = "1", features = ["full"] }
+clap = { version = "4.0", features = ["derive"] }
+# depend on the core library crate
+solana-validator-optimizer = { path = "../core", version = "2.1.0", default-features = false }
+
+[features]
+default = ["metrics"]
+metrics = ["solana-validator-optimizer/metrics"]
+# (optional, only if you actually have a pro crate/feature wired)
+pro = ["solana-validator-optimizer/pro"]

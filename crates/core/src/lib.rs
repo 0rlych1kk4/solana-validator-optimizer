@@ -9,7 +9,7 @@
 //! - Configuration auto-tuning for validator nodes
 
 /// Current version of the optimizer
-pub const VERSION: &str = "1.1.1";
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// A brief description of this optimizer's capabilities.
 pub fn help_summary() -> &'static str {
