@@ -7,8 +7,7 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-solana-client = "3"
+solana-client = "3.1.10"
 solana-sdk = "3"
 solana-ledger = "3"
 solana-commitment-config = "3"
-
