@@ -8352,7 +8352,7 @@ dependencies = [
 
 [[package]]
 name = "solana-validator-optimizer"
-version = "2.1.1"
+version = "2.1.2"
 dependencies = [
  "anyhow",
  "axum 0.7.9",
@@ -8379,7 +8379,7 @@ dependencies = [
 
 [[package]]
 name = "solana-validator-optimizer-cli"
-version = "2.1.1"
+version = "2.1.2"
 dependencies = [
  "anyhow",
  "clap",
