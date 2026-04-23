@@ -1,75 +1,60 @@
 # Changelog
 
-<<<<<<< HEAD
-## [1.1.0] - 2025-04-24
-=======
 All notable changes to this project will be documented in this file.  
 This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+
+## [2.1.2] - 2026-04-23
+### Security & Maintenance
+- Updated Solana dependencies to v3.1.12
+- Updated OpenSSL bindings to latest compatible versions
+- Reduced exposure to upstream OpenSSL advisories
+
+### Notes
+- OpenSSL is a transitive dependency via Solana runtime
+- No direct usage in this project’s execution path
+- Continuing to monitor upstream patches
+
+---
+
 ## [1.2.1] - 2026-01-25
 ### Changed
 - Documentation and metadata cleanup
 - Removed legacy NOTICE file for MIT-only licensing clarity
 
+---
+
 ## [1.2.0] – 2025-11-15
-### **Solana 3.x Upgrade**
+### Solana 3.x Upgrade
 
-This release upgrades **solana-validator-optimizer** to the **Solana 3.x** stack and modernizes internal modules for long-term compatibility.
-
-###  Added / Updated
-- Upgraded core Solana crates to **3.0.x**:
+### Added / Updated
+- Upgraded core Solana crates to 3.0.x:
   - `solana-client`
   - `solana-sdk`
   - `solana-ledger`
-- Added `solana-commitment-config` (replaces the removed `commitment_config` module in Solana v3)
-- Updated all affected internal modules for the new Solana API structure:
-  - `rpc_cache_layer.rs`
-  - `blockstream_optimizer.rs`
-  - `config.rs` / `config_autotuner.rs`
-  - `snapshot_prefetcher.rs`
-  - `metrics.rs`
-  - `utils.rs`
-- Verified end-to-end functionality against:
-  - **Devnet** (`https://api.devnet.solana.com`)
-  - **Local validator** (`solana-test-validator`)
-- Confirmed correct behavior of:
-  - RPC LRU cache
-  - Snapshot prefetcher
-  - Blockstream optimizer
-  - Metrics server
+- Added `solana-commitment-config`
+- Updated internal modules for Solana v3 API
 
-### ️ Fixed
-- Replaced all Solana v1.18 path imports removed or relocated in Solana v3.x  
-  (e.g., `commitment_config` now comes from `solana-commitment-config`)
-- Cleaned workspace structure:
-  - `core` crate is now **library-only**
-  - Binary lives in `bin/cli`
+### Fixed
+- Replaced deprecated Solana imports
+- Cleaned workspace structure
 
-###  Impact on Users
-- **No breaking API changes** in the public Rust library
-- Downstream crates can now use SVO with **Solana 3.x** without any `[patch]` overrides
-- Eliminates future incompatibility warnings related to outdated Solana crates
+### Impact
+- No breaking API changes
+- Full compatibility with Solana 3.x
 
-###  Upgrade
-
-```toml
-[dependencies]
-solana-validator-optimizer = "1.2"
-```
+---
 
 ## [1.1.1] - 2025-11-09
->>>>>>> 073c2b6 (Release v1.2.1: documentation and licensing cleanup)
-
 ### Added
-- Introduced `lib.rs` with public module exports (`config`, `metrics`, `rpc_cache_layer`, etc.).
-- Added `help_summary()` and `VERSION` constant to public API.
-- Enabled full API documentation on [docs.rs](https://docs.rs/solana-validator-optimizer).
+- Introduced `lib.rs` with public module exports
+- Added `help_summary()` and `VERSION`
+- Enabled docs.rs support
 
 ### Improved
-- Project is now usable as both a CLI tool *and* a Rust library crate.
+- CLI + library dual usage
 
 ---
 
 Older versions are described in release tags.
-
