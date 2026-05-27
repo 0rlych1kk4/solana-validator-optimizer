@@ -13,7 +13,7 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// A brief description of this optimizer's capabilities.
 pub fn help_summary() -> &'static str {
-    "Optimizes Solana validator performance using snapshot prefetching, RPC caching, and Prometheus metrics."
+    "Optimizes Solana infrastructure performance using snapshot prefetching, RPC caching, RPC health diagnostics, and Prometheus metrics."
 }
 
 // === Public API modules ===
@@ -23,6 +23,6 @@ pub mod config;
 pub mod config_autotuner;
 pub mod metrics;
 pub mod rpc_cache_layer;
+pub mod rpc_health;
 pub mod snapshot_prefetcher;
 pub mod utils;
-
