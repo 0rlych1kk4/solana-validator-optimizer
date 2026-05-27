@@ -7,27 +7,18 @@ use prometheus::{Encoder, TextEncoder};
 
 /// Core metrics — registered globally
 pub static REQUEST_COUNTER: Lazy<IntCounter> = Lazy::new(|| {
-    prometheus::register_int_counter!(
-        "rpc_requests_total",
-        "Total number of RPC requests handled"
-    )
-    .expect("failed to register rpc_requests_total")
+    prometheus::register_int_counter!("rpc_requests_total", "Total number of RPC requests handled")
+        .expect("failed to register rpc_requests_total")
 });
 
 pub static CACHE_HIT_COUNTER: Lazy<IntCounter> = Lazy::new(|| {
-    prometheus::register_int_counter!(
-        "rpc_cache_hits_total",
-        "Total RPC cache hits"
-    )
-    .expect("failed to register rpc_cache_hits_total")
+    prometheus::register_int_counter!("rpc_cache_hits_total", "Total RPC cache hits")
+        .expect("failed to register rpc_cache_hits_total")
 });
 
 pub static CACHE_MISS_COUNTER: Lazy<IntCounter> = Lazy::new(|| {
-    prometheus::register_int_counter!(
-        "rpc_cache_misses_total",
-        "Total RPC cache misses"
-    )
-    .expect("failed to register rpc_cache_misses_total")
+    prometheus::register_int_counter!("rpc_cache_misses_total", "Total RPC cache misses")
+        .expect("failed to register rpc_cache_misses_total")
 });
 
 /// Public entry point (always available)
@@ -49,9 +40,7 @@ async fn start_metrics_server_impl(config: &AppConfig) -> anyhow::Result<()> {
     #[cfg(feature = "pro")]
     {
         use solana_validator_optimizer_pro::metrics::{
-            RPC_CACHE_HIT_RATIO,
-            RPC_EVICTIONS_TOTAL,
-            SNAPSHOT_REPUTATION_SCORE,
+            RPC_CACHE_HIT_RATIO, RPC_EVICTIONS_TOTAL, SNAPSHOT_REPUTATION_SCORE,
         };
 
         let _ = &*RPC_EVICTIONS_TOTAL;

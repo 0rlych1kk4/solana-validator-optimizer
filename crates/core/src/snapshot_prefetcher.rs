@@ -86,4 +86,3 @@ fn compute_sha256<P: AsRef<Path>>(path: P) -> Result<String> {
 
     Ok(format!("{:x}", hasher.finalize()))
 }
-

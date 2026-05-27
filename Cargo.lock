@@ -8382,6 +8382,7 @@ version = "2.1.2"
 dependencies = [
  "anyhow",
  "clap",
+ "serde_json",
  "solana-validator-optimizer",
  "tokio",
 ]

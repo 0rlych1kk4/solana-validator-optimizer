@@ -142,8 +142,7 @@ async fn fetch_from_solana(key: &str, rpc_url: &str) -> anyhow::Result<String> {
     // Counts only real upstream calls to Solana.
     UPSTREAM_REQUEST_COUNTER.inc();
 
-    let client =
-        RpcClient::new_with_commitment(rpc_url.to_string(), CommitmentConfig::confirmed());
+    let client = RpcClient::new_with_commitment(rpc_url.to_string(), CommitmentConfig::confirmed());
 
     if key.starts_with("getBalance:") {
         let pubkey_str = key
