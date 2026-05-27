@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+## [2.2.0] - 2026-05-27
+
+### Added
+- Added Solana RPC Health Checker for endpoint health, version, slot, blockhash availability, and latency diagnostics.
+- Added Solana Priority Fee Advisor for estimating priority fees from compute units and micro-lamports per compute unit.
+- Added JSON output support for infrastructure diagnostics.
+- Added unit tests for priority fee calculations and edge cases.
+
+### Security
+- Updated `openssl` from `0.10.79` to `0.10.80`.
+- Updated `openssl-sys` from `0.9.115` to `0.9.116`.
+
+### Changed
+- Expanded project scope from validator optimization toward Solana infrastructure diagnostics and production-readiness tooling.
+---
 
 ## [2.1.2] - 2026-04-23
 ### Security & Maintenance
