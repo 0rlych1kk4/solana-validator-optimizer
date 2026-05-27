@@ -4,8 +4,7 @@
 [![Release](https://img.shields.io/github/v/release/0rlych1kk4/solana-validator-optimizer?display_name=tag)](https://github.com/0rlych1kk4/solana-validator-optimizer/releases)
 [![Docs.rs](https://docs.rs/solana-validator-optimizer/badge.svg)](https://docs.rs/solana-validator-optimizer)
 
-> A production-grade Rust toolkit to enhance Solana validator performance by reducing sync latency and improving RPC responsiveness.
-
+> A production-grade Rust toolkit for Solana infrastructure diagnostics, validator optimization, RPC health checks, caching, metrics, and production-readiness workflows.
 ---
 
 ## Overview
@@ -46,7 +45,7 @@ This project targets the **Solana / Agave v3 validator era**.
 | RPC LRU Cache          | Reduces redundant RPC calls like `getBalance`, `getEpochInfo`, etc.        |
 | Prometheus Metrics     | `/metrics` endpoint for cache hits, misses, request counts, and latency    |
 | Config Auto-Tuner      | Adjusts validator configuration based on CPU, RAM, disk, and network       |
-
+| RPC Health Checker     | Checks RPC endpoint health, Solana version, current slot, latest blockhash availability, and latency across key RPC calls |
 ---
 
 ## Architecture
@@ -141,7 +140,41 @@ async fn main() -> anyhow::Result<()> {
 ```
 
 ---
+## Usage – RPC Health Checker
 
+Check the configured Solana RPC endpoint from `Config.toml`:
+
+```bash
+cargo run -p solana-validator-optimizer-cli -- rpc-health
+```
+
+Example output:
+
+```bash
+Solana RPC Health Report
+Endpoint: https://api.mainnet-beta.solana.com
+Healthy: true
+Health Status: ok
+Solana Version: 4.0.0
+Current Slot: 422507351
+Latest Blockhash: C5cWMY4npRumFBVjaGF1Su3xQHyXshF7LL93S7yCo29m
+getHealth Latency: 622 ms
+getVersion Latency: 216 ms
+getSlot Latency: 207 ms
+getLatestBlockhash Latency: 306 ms
+```
+Use a custom endpoint:
+```bash
+cargo run -p solana-validator-optimizer-cli -- rpc-health \
+  --endpoint https://api.mainnet-beta.solana.com
+```
+Output as JSON:
+
+```bash
+cargo run -p solana-validator-optimizer-cli -- rpc-health --json
+```
+The RPC Health Checker helps Solana infrastructure teams validate endpoint health, blockhash availability, and latency before transaction submission or production deployment.
+---
 ## Environment Variables
 
 Any Config.toml value can be overridden using the OPTIMIZER_ prefix.
