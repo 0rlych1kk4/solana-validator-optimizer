@@ -2,14 +2,15 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 use solana_validator_optimizer::{
-    config::AppConfig, config_autotuner, metrics, rpc_cache_layer, rpc_health, snapshot_prefetcher,
+    config::AppConfig, config_autotuner, metrics, priority_fee, rpc_cache_layer, rpc_health,
+    snapshot_prefetcher,
 };
 
 #[derive(Parser, Debug)]
 #[command(
     name = "svo",
     version = env!("CARGO_PKG_VERSION"),
-    about = "Solana Validator Optimizer CLI (snapshot prefetch, RPC cache, metrics, RPC health diagnostics)."
+    about = "Solana Validator Optimizer CLI (snapshot prefetch, RPC cache, metrics, RPC health diagnostics, priority fee advice)."
 )]
 struct Cli {
     /// Path to config file (default: ./Config.toml)
@@ -45,6 +46,21 @@ enum Commands {
         endpoint: Option<String>,
 
         /// Output report as JSON
+        #[arg(long)]
+        json: bool,
+    },
+
+    /// Estimate Solana transaction priority fee and provide basic fee guidance
+    FeeAdvice {
+        /// Compute unit limit for the transaction
+        #[arg(long)]
+        compute_units: u64,
+
+        /// Compute unit price in micro-lamports
+        #[arg(long)]
+        micro_lamports: u64,
+
+        /// Output advice as JSON
         #[arg(long)]
         json: bool,
     },
@@ -153,6 +169,35 @@ async fn main() -> Result<()> {
                         println!("- {warning}");
                     }
                 }
+            }
+        }
+
+        Commands::FeeAdvice {
+            compute_units,
+            micro_lamports,
+            json,
+        } => {
+            let advice = priority_fee::advise_priority_fee(compute_units, micro_lamports);
+
+            if json {
+                println!("{}", serde_json::to_string_pretty(&advice)?);
+            } else {
+                println!("Solana Priority Fee Advice");
+                println!("Compute Units: {}", advice.compute_units);
+                println!(
+                    "Compute Unit Price: {} micro-lamports",
+                    advice.micro_lamports_per_compute_unit
+                );
+                println!(
+                    "Estimated Priority Fee: {} lamports",
+                    advice.estimated_priority_fee_lamports
+                );
+                println!(
+                    "Estimated Priority Fee: {:.9} SOL",
+                    advice.estimated_priority_fee_sol
+                );
+                println!("Risk Level: {}", advice.risk_level);
+                println!("Recommendation: {}", advice.recommendation);
             }
         }
 
