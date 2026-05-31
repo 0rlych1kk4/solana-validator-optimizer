@@ -5,7 +5,11 @@ use prometheus::IntCounter;
 #[cfg(feature = "metrics")]
 use prometheus::{Encoder, TextEncoder};
 
-/// Core metrics — registered globally
+/// Core metrics — registered globally.
+///
+/// These metrics belong to the public/open-source core crate.
+/// Public metrics must not depend on private/pro crates because the public
+/// crate must compile and publish independently on crates.io.
 pub static REQUEST_COUNTER: Lazy<IntCounter> = Lazy::new(|| {
     prometheus::register_int_counter!("rpc_requests_total", "Total number of RPC requests handled")
         .expect("failed to register rpc_requests_total")
@@ -21,13 +25,16 @@ pub static CACHE_MISS_COUNTER: Lazy<IntCounter> = Lazy::new(|| {
         .expect("failed to register rpc_cache_misses_total")
 });
 
-/// Public entry point (always available)
+/// Public entry point.
+///
+/// When the `metrics` feature is enabled, this starts the HTTP metrics endpoint.
+/// When the `metrics` feature is disabled, this is a no-op.
 pub async fn start_metrics_server(config: &AppConfig) -> anyhow::Result<()> {
     start_metrics_server_impl(config).await
 }
 
 //
-// ===== Feature: metrics (HTTP server enabled) =====
+// ===== Feature: metrics HTTP server enabled =====
 //
 
 #[cfg(feature = "metrics")]
@@ -35,18 +42,6 @@ async fn start_metrics_server_impl(config: &AppConfig) -> anyhow::Result<()> {
     use axum::{routing::get, Router};
     use std::net::SocketAddr;
     use tokio::net::TcpListener;
-
-    // Initialize Pro metrics if feature enabled
-    #[cfg(feature = "pro")]
-    {
-        use solana_validator_optimizer_pro::metrics::{
-            RPC_CACHE_HIT_RATIO, RPC_EVICTIONS_TOTAL, SNAPSHOT_REPUTATION_SCORE,
-        };
-
-        let _ = &*RPC_EVICTIONS_TOTAL;
-        let _ = &*RPC_CACHE_HIT_RATIO;
-        let _ = &*SNAPSHOT_REPUTATION_SCORE;
-    }
 
     let app = Router::new().route("/metrics", get(serve_metrics));
     let addr = SocketAddr::from(([0, 0, 0, 0], config.metrics_port));
@@ -73,7 +68,7 @@ async fn serve_metrics() -> String {
 }
 
 //
-// ===== No metrics feature (library-only mode) =====
+// ===== No metrics feature: library-only mode =====
 //
 
 #[cfg(not(feature = "metrics"))]
