@@ -112,7 +112,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-solana-validator-optimizer = "2.2.1"
+solana-validator-optimizer = "2.3.0"
 tokio = { version = "1", features = ["full"] }
 anyhow = "1"
 ```
