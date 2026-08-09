@@ -26,15 +26,23 @@ pub struct PreflightReport {
 }
 
 pub async fn run(config: &AppConfig) -> Result<PreflightReport> {
+    run_with_expected_genesis(config, None).await
+}
+
+pub async fn run_with_expected_genesis(
+    config: &AppConfig,
+    expected_genesis_hash: Option<&str>,
+) -> Result<PreflightReport> {
     let rpc = rpc_health::check_rpc_health(config).await?;
     let system = system_health::check_system_health();
 
-    Ok(evaluate_reports(rpc, system))
+    Ok(evaluate_reports(rpc, system, expected_genesis_hash))
 }
 
 fn evaluate_reports(
     rpc: rpc_health::RpcHealthReport,
     system: system_health::SystemHealthReport,
+    expected_genesis_hash: Option<&str>,
 ) -> PreflightReport {
     let mut checks = Vec::new();
 
@@ -61,13 +69,23 @@ fn evaluate_reports(
         },
     });
 
-    checks.push(match &rpc.genesis_hash {
-        Some(hash) => PreflightCheck {
+    checks.push(match (&rpc.genesis_hash, expected_genesis_hash) {
+        (Some(observed), Some(expected)) if observed == expected => PreflightCheck {
             name: "genesis_hash".to_string(),
             status: CheckStatus::Pass,
-            message: format!("Genesis hash: {hash}"),
+            message: format!("Genesis hash matches expected value: {observed}"),
         },
-        None => PreflightCheck {
+        (Some(observed), Some(expected)) => PreflightCheck {
+            name: "genesis_hash".to_string(),
+            status: CheckStatus::Fail,
+            message: format!("Genesis hash mismatch: expected {expected}, observed {observed}"),
+        },
+        (Some(observed), None) => PreflightCheck {
+            name: "genesis_hash".to_string(),
+            status: CheckStatus::Pass,
+            message: format!("Genesis hash: {observed}"),
+        },
+        (None, _) => PreflightCheck {
             name: "genesis_hash".to_string(),
             status: CheckStatus::Fail,
             message: "Unable to retrieve genesis hash".to_string(),
@@ -235,7 +253,7 @@ mod tests {
 
     #[test]
     fn healthy_rpc_is_ready() {
-        let report = evaluate_reports(healthy_rpc_report(), healthy_system_report());
+        let report = evaluate_reports(healthy_rpc_report(), healthy_system_report(), None);
 
         assert!(report.ready);
         assert!(report
@@ -251,7 +269,7 @@ mod tests {
         rpc.warnings
             .push("getHealth latency is high: 1500 ms".to_string());
 
-        let report = evaluate_reports(rpc, healthy_system_report());
+        let report = evaluate_reports(rpc, healthy_system_report(), None);
 
         assert!(report.ready);
         assert!(report
@@ -266,7 +284,7 @@ mod tests {
         rpc.healthy = false;
         rpc.health_status = "unhealthy".to_string();
 
-        let report = evaluate_reports(rpc, healthy_system_report());
+        let report = evaluate_reports(rpc, healthy_system_report(), None);
 
         assert!(!report.ready);
         assert!(report
@@ -276,11 +294,37 @@ mod tests {
     }
 
     #[test]
+    fn matching_expected_genesis_is_ready() {
+        let rpc = healthy_rpc_report();
+
+        let report = evaluate_reports(rpc, healthy_system_report(), Some("test-genesis-hash"));
+
+        assert!(report.ready);
+        assert!(report
+            .checks
+            .iter()
+            .any(|check| { check.name == "genesis_hash" && check.status == CheckStatus::Pass }));
+    }
+
+    #[test]
+    fn mismatched_expected_genesis_is_not_ready() {
+        let rpc = healthy_rpc_report();
+
+        let report = evaluate_reports(rpc, healthy_system_report(), Some("wrong-genesis-hash"));
+
+        assert!(!report.ready);
+        assert!(report
+            .checks
+            .iter()
+            .any(|check| { check.name == "genesis_hash" && check.status == CheckStatus::Fail }));
+    }
+
+    #[test]
     fn missing_genesis_hash_is_not_ready() {
         let mut rpc = healthy_rpc_report();
         rpc.genesis_hash = None;
 
-        let report = evaluate_reports(rpc, healthy_system_report());
+        let report = evaluate_reports(rpc, healthy_system_report(), None);
 
         assert!(!report.ready);
         assert!(report
@@ -294,7 +338,7 @@ mod tests {
         let mut rpc = healthy_rpc_report();
         rpc.slot = None;
 
-        let report = evaluate_reports(rpc, healthy_system_report());
+        let report = evaluate_reports(rpc, healthy_system_report(), None);
 
         assert!(!report.ready);
         assert!(report
@@ -307,7 +351,7 @@ mod tests {
         let mut system = healthy_system_report();
         system.total_memory_bytes = 2 * 1024 * 1024 * 1024;
 
-        let report = evaluate_reports(healthy_rpc_report(), system);
+        let report = evaluate_reports(healthy_rpc_report(), system, None);
 
         assert!(!report.ready);
         assert!(report
@@ -321,7 +365,7 @@ mod tests {
         let mut system = healthy_system_report();
         system.available_memory_bytes = 512 * 1024 * 1024;
 
-        let report = evaluate_reports(healthy_rpc_report(), system);
+        let report = evaluate_reports(healthy_rpc_report(), system, None);
 
         assert!(report.ready);
         assert!(report.checks.iter().any(|check| {
@@ -334,7 +378,7 @@ mod tests {
         let mut system = healthy_system_report();
         system.disk_available_bytes = Some(25 * 1024 * 1024 * 1024);
 
-        let report = evaluate_reports(healthy_rpc_report(), system);
+        let report = evaluate_reports(healthy_rpc_report(), system, None);
 
         assert!(report.ready);
         assert!(report

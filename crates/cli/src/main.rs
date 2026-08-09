@@ -52,6 +52,10 @@ enum Commands {
 
     /// Run validator production-readiness checks
     Preflight {
+        /// Expected genesis hash for cluster validation
+        #[arg(long)]
+        expected_genesis_hash: Option<String>,
+
         /// Output report as JSON
         #[arg(long)]
         json: bool,
@@ -187,8 +191,13 @@ async fn main() -> Result<()> {
             }
         }
 
-        Commands::Preflight { json } => {
-            let report = preflight::run(&cfg).await?;
+        Commands::Preflight {
+            expected_genesis_hash,
+            json,
+        } => {
+            let report =
+                preflight::run_with_expected_genesis(&cfg, expected_genesis_hash.as_deref())
+                    .await?;
 
             if json {
                 println!("{}", serde_json::to_string_pretty(&report)?);
