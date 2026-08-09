@@ -147,6 +147,10 @@ async fn main() -> Result<()> {
                     println!("Solana Version: {version}");
                 }
 
+                if let Some(genesis_hash) = report.genesis_hash {
+                    println!("Genesis Hash: {genesis_hash}");
+                }
+
                 if let Some(slot) = report.slot {
                     println!("Current Slot: {slot}");
                 }
@@ -159,6 +163,10 @@ async fn main() -> Result<()> {
 
                 if let Some(latency) = report.get_version_latency_ms {
                     println!("getVersion Latency: {latency} ms");
+                }
+
+                if let Some(latency) = report.get_genesis_hash_latency_ms {
+                    println!("getGenesisHash Latency: {latency} ms");
                 }
 
                 if let Some(latency) = report.get_slot_latency_ms {

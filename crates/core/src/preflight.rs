@@ -61,6 +61,19 @@ fn evaluate_reports(
         },
     });
 
+    checks.push(match &rpc.genesis_hash {
+        Some(hash) => PreflightCheck {
+            name: "genesis_hash".to_string(),
+            status: CheckStatus::Pass,
+            message: format!("Genesis hash: {hash}"),
+        },
+        None => PreflightCheck {
+            name: "genesis_hash".to_string(),
+            status: CheckStatus::Fail,
+            message: "Unable to retrieve genesis hash".to_string(),
+        },
+    });
+
     checks.push(match rpc.slot {
         Some(slot) => PreflightCheck {
             name: "current_slot".to_string(),
@@ -198,10 +211,12 @@ mod tests {
             healthy: true,
             health_status: "ok".to_string(),
             solana_version: Some("4.2.0-rc.1".to_string()),
+            genesis_hash: Some("test-genesis-hash".to_string()),
             slot: Some(438_200_491),
             latest_blockhash: Some("test-blockhash".to_string()),
             get_health_latency_ms: 100,
             get_version_latency_ms: Some(100),
+            get_genesis_hash_latency_ms: Some(100),
             get_slot_latency_ms: Some(100),
             get_latest_blockhash_latency_ms: Some(100),
             warnings: Vec::new(),
@@ -258,6 +273,20 @@ mod tests {
             .checks
             .iter()
             .any(|check| { check.name == "rpc_health" && check.status == CheckStatus::Fail }));
+    }
+
+    #[test]
+    fn missing_genesis_hash_is_not_ready() {
+        let mut rpc = healthy_rpc_report();
+        rpc.genesis_hash = None;
+
+        let report = evaluate_reports(rpc, healthy_system_report());
+
+        assert!(!report.ready);
+        assert!(report
+            .checks
+            .iter()
+            .any(|check| { check.name == "genesis_hash" && check.status == CheckStatus::Fail }));
     }
 
     #[test]
