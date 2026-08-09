@@ -1,4 +1,4 @@
-use crate::{config::AppConfig, rpc_health};
+use crate::{config::AppConfig, rpc_health, system_health};
 use anyhow::Result;
 use serde::Serialize;
 
@@ -27,10 +27,15 @@ pub struct PreflightReport {
 
 pub async fn run(config: &AppConfig) -> Result<PreflightReport> {
     let rpc = rpc_health::check_rpc_health(config).await?;
-    Ok(evaluate_rpc_report(rpc))
+    let system = system_health::check_system_health();
+
+    Ok(evaluate_reports(rpc, system))
 }
 
-fn evaluate_rpc_report(rpc: rpc_health::RpcHealthReport) -> PreflightReport {
+fn evaluate_reports(
+    rpc: rpc_health::RpcHealthReport,
+    system: system_health::SystemHealthReport,
+) -> PreflightReport {
     let mut checks = Vec::new();
 
     checks.push(PreflightCheck {
@@ -111,6 +116,64 @@ fn evaluate_rpc_report(rpc: rpc_health::RpcHealthReport) -> PreflightReport {
         }
     });
 
+    checks.push(PreflightCheck {
+        name: "cpu".to_string(),
+        status: if system.logical_cpu_count < 2 {
+            CheckStatus::Fail
+        } else if system.logical_cpu_count < 8 {
+            CheckStatus::Warn
+        } else {
+            CheckStatus::Pass
+        },
+        message: format!("Logical CPU count: {}", system.logical_cpu_count),
+    });
+
+    checks.push(PreflightCheck {
+        name: "memory_total".to_string(),
+        status: if system.total_memory_gib() < 4.0 {
+            CheckStatus::Fail
+        } else if system.total_memory_gib() < 16.0 {
+            CheckStatus::Warn
+        } else {
+            CheckStatus::Pass
+        },
+        message: format!("Total memory: {:.1} GiB", system.total_memory_gib()),
+    });
+
+    checks.push(PreflightCheck {
+        name: "memory_available".to_string(),
+        status: if system.available_memory_gib() < 4.0 {
+            CheckStatus::Warn
+        } else {
+            CheckStatus::Pass
+        },
+        message: format!("Available memory: {:.2} GiB", system.available_memory_gib()),
+    });
+
+    checks.push(match system.disk_available_gib() {
+        Some(available) => PreflightCheck {
+            name: "disk_available".to_string(),
+            status: if available < 10.0 {
+                CheckStatus::Fail
+            } else if available < 50.0 {
+                CheckStatus::Warn
+            } else {
+                CheckStatus::Pass
+            },
+            message: match system.disk_total_gib() {
+                Some(total) => {
+                    format!("Disk space: {available:.1} GiB available / {total:.1} GiB total")
+                }
+                None => format!("Disk space available: {available:.1} GiB"),
+            },
+        },
+        None => PreflightCheck {
+            name: "disk_available".to_string(),
+            status: CheckStatus::Warn,
+            message: "Unable to determine disk capacity".to_string(),
+        },
+    });
+
     let ready = !checks.iter().any(|check| check.status == CheckStatus::Fail);
 
     PreflightReport {
@@ -145,9 +208,19 @@ mod tests {
         }
     }
 
+    fn healthy_system_report() -> system_health::SystemHealthReport {
+        system_health::SystemHealthReport {
+            logical_cpu_count: 16,
+            total_memory_bytes: 64 * 1024 * 1024 * 1024,
+            available_memory_bytes: 32 * 1024 * 1024 * 1024,
+            disk_total_bytes: Some(2 * 1024 * 1024 * 1024 * 1024),
+            disk_available_bytes: Some(500 * 1024 * 1024 * 1024),
+        }
+    }
+
     #[test]
     fn healthy_rpc_is_ready() {
-        let report = evaluate_rpc_report(healthy_rpc_report());
+        let report = evaluate_reports(healthy_rpc_report(), healthy_system_report());
 
         assert!(report.ready);
         assert!(report
@@ -163,7 +236,7 @@ mod tests {
         rpc.warnings
             .push("getHealth latency is high: 1500 ms".to_string());
 
-        let report = evaluate_rpc_report(rpc);
+        let report = evaluate_reports(rpc, healthy_system_report());
 
         assert!(report.ready);
         assert!(report
@@ -178,7 +251,7 @@ mod tests {
         rpc.healthy = false;
         rpc.health_status = "unhealthy".to_string();
 
-        let report = evaluate_rpc_report(rpc);
+        let report = evaluate_reports(rpc, healthy_system_report());
 
         assert!(!report.ready);
         assert!(report
@@ -192,12 +265,52 @@ mod tests {
         let mut rpc = healthy_rpc_report();
         rpc.slot = None;
 
-        let report = evaluate_rpc_report(rpc);
+        let report = evaluate_reports(rpc, healthy_system_report());
 
         assert!(!report.ready);
         assert!(report
             .checks
             .iter()
             .any(|check| { check.name == "current_slot" && check.status == CheckStatus::Fail }));
+    }
+    #[test]
+    fn low_memory_is_not_ready() {
+        let mut system = healthy_system_report();
+        system.total_memory_bytes = 2 * 1024 * 1024 * 1024;
+
+        let report = evaluate_reports(healthy_rpc_report(), system);
+
+        assert!(!report.ready);
+        assert!(report
+            .checks
+            .iter()
+            .any(|check| { check.name == "memory_total" && check.status == CheckStatus::Fail }));
+    }
+
+    #[test]
+    fn low_available_memory_warns_but_remains_ready() {
+        let mut system = healthy_system_report();
+        system.available_memory_bytes = 512 * 1024 * 1024;
+
+        let report = evaluate_reports(healthy_rpc_report(), system);
+
+        assert!(report.ready);
+        assert!(report.checks.iter().any(|check| {
+            check.name == "memory_available" && check.status == CheckStatus::Warn
+        }));
+    }
+
+    #[test]
+    fn low_disk_warns_but_remains_ready() {
+        let mut system = healthy_system_report();
+        system.disk_available_bytes = Some(25 * 1024 * 1024 * 1024);
+
+        let report = evaluate_reports(healthy_rpc_report(), system);
+
+        assert!(report.ready);
+        assert!(report
+            .checks
+            .iter()
+            .any(|check| { check.name == "disk_available" && check.status == CheckStatus::Warn }));
     }
 }

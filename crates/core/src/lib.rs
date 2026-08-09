@@ -27,4 +27,5 @@ pub mod priority_fee;
 pub mod rpc_cache_layer;
 pub mod rpc_health;
 pub mod snapshot_prefetcher;
+pub mod system_health;
 pub mod utils;
