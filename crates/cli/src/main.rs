@@ -2,8 +2,8 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 use solana_validator_optimizer::{
-    config::AppConfig, config_autotuner, metrics, priority_fee, rpc_cache_layer, rpc_health,
-    snapshot_prefetcher,
+    config::AppConfig, config_autotuner, metrics, preflight, priority_fee, rpc_cache_layer,
+    rpc_health, snapshot_prefetcher,
 };
 
 #[derive(Parser, Debug)]
@@ -44,6 +44,17 @@ enum Commands {
         /// Override RPC endpoint from Config.toml
         #[arg(long)]
         endpoint: Option<String>,
+
+        /// Output report as JSON
+        #[arg(long)]
+        json: bool,
+    },
+
+    /// Run validator production-readiness checks
+    Preflight {
+        /// Expected genesis hash for cluster validation
+        #[arg(long)]
+        expected_genesis_hash: Option<String>,
 
         /// Output report as JSON
         #[arg(long)]
@@ -140,6 +151,10 @@ async fn main() -> Result<()> {
                     println!("Solana Version: {version}");
                 }
 
+                if let Some(genesis_hash) = report.genesis_hash {
+                    println!("Genesis Hash: {genesis_hash}");
+                }
+
                 if let Some(slot) = report.slot {
                     println!("Current Slot: {slot}");
                 }
@@ -152,6 +167,10 @@ async fn main() -> Result<()> {
 
                 if let Some(latency) = report.get_version_latency_ms {
                     println!("getVersion Latency: {latency} ms");
+                }
+
+                if let Some(latency) = report.get_genesis_hash_latency_ms {
+                    println!("getGenesisHash Latency: {latency} ms");
                 }
 
                 if let Some(latency) = report.get_slot_latency_ms {
@@ -169,6 +188,47 @@ async fn main() -> Result<()> {
                         println!("- {warning}");
                     }
                 }
+            }
+        }
+
+        Commands::Preflight {
+            expected_genesis_hash,
+            json,
+        } => {
+            let report =
+                preflight::run_with_expected_genesis(&cfg, expected_genesis_hash.as_deref())
+                    .await?;
+
+            if json {
+                println!("{}", serde_json::to_string_pretty(&report)?);
+            } else {
+                println!("Solana Validator Preflight");
+                println!("Endpoint: {}", report.endpoint);
+                println!();
+
+                for check in &report.checks {
+                    let status = match check.status {
+                        preflight::CheckStatus::Pass => "PASS",
+                        preflight::CheckStatus::Warn => "WARN",
+                        preflight::CheckStatus::Fail => "FAIL",
+                    };
+
+                    println!("[{status}] {:<20} {}", check.name, check.message);
+                }
+
+                if !report.warnings.is_empty() {
+                    println!();
+                    println!("Warnings:");
+                    for warning in &report.warnings {
+                        println!("- {warning}");
+                    }
+                }
+
+                println!();
+                println!(
+                    "Overall readiness: {}",
+                    if report.ready { "READY" } else { "NOT READY" }
+                );
             }
         }
 

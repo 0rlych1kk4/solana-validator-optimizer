@@ -11,10 +11,12 @@ pub struct RpcHealthReport {
     pub healthy: bool,
     pub health_status: String,
     pub solana_version: Option<String>,
+    pub genesis_hash: Option<String>,
     pub slot: Option<u64>,
     pub latest_blockhash: Option<String>,
     pub get_health_latency_ms: u128,
     pub get_version_latency_ms: Option<u128>,
+    pub get_genesis_hash_latency_ms: Option<u128>,
     pub get_slot_latency_ms: Option<u128>,
     pub get_latest_blockhash_latency_ms: Option<u128>,
     pub warnings: Vec<String>,
@@ -59,6 +61,18 @@ pub async fn check_rpc_health_url(endpoint: &str) -> Result<RpcHealthReport> {
         }
     };
 
+    let genesis_start = Instant::now();
+    let genesis_result = client.get_genesis_hash().await;
+    let get_genesis_hash_latency_ms = Some(genesis_start.elapsed().as_millis());
+
+    let genesis_hash = match genesis_result {
+        Ok(hash) => Some(hash.to_string()),
+        Err(err) => {
+            warnings.push(format!("getGenesisHash failed: {err}"));
+            None
+        }
+    };
+
     let slot_start = Instant::now();
     let slot_result = client.get_slot().await;
     let get_slot_latency_ms = Some(slot_start.elapsed().as_millis());
@@ -95,6 +109,12 @@ pub async fn check_rpc_health_url(endpoint: &str) -> Result<RpcHealthReport> {
         }
     }
 
+    if let Some(latency) = get_genesis_hash_latency_ms {
+        if latency > 1_000 {
+            warnings.push(format!("getGenesisHash latency is high: {latency} ms"));
+        }
+    }
+
     if let Some(latency) = get_slot_latency_ms {
         if latency > 1_000 {
             warnings.push(format!("getSlot latency is high: {latency} ms"));
@@ -112,10 +132,12 @@ pub async fn check_rpc_health_url(endpoint: &str) -> Result<RpcHealthReport> {
         healthy,
         health_status,
         solana_version,
+        genesis_hash,
         slot,
         latest_blockhash,
         get_health_latency_ms,
         get_version_latency_ms,
+        get_genesis_hash_latency_ms,
         get_slot_latency_ms,
         get_latest_blockhash_latency_ms,
         warnings,
