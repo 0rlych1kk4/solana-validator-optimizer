@@ -2,8 +2,8 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 use solana_validator_optimizer::{
-    config::AppConfig, config_autotuner, metrics, priority_fee, rpc_cache_layer, rpc_health,
-    snapshot_prefetcher,
+    config::AppConfig, config_autotuner, metrics, preflight, priority_fee, rpc_cache_layer,
+    rpc_health, snapshot_prefetcher,
 };
 
 #[derive(Parser, Debug)]
@@ -45,6 +45,13 @@ enum Commands {
         #[arg(long)]
         endpoint: Option<String>,
 
+        /// Output report as JSON
+        #[arg(long)]
+        json: bool,
+    },
+
+    /// Run validator production-readiness checks
+    Preflight {
         /// Output report as JSON
         #[arg(long)]
         json: bool,
@@ -169,6 +176,42 @@ async fn main() -> Result<()> {
                         println!("- {warning}");
                     }
                 }
+            }
+        }
+
+        Commands::Preflight { json } => {
+            let report = preflight::run(&cfg).await?;
+
+            if json {
+                println!("{}", serde_json::to_string_pretty(&report)?);
+            } else {
+                println!("Solana Validator Preflight");
+                println!("Endpoint: {}", report.endpoint);
+                println!();
+
+                for check in &report.checks {
+                    let status = match check.status {
+                        preflight::CheckStatus::Pass => "PASS",
+                        preflight::CheckStatus::Warn => "WARN",
+                        preflight::CheckStatus::Fail => "FAIL",
+                    };
+
+                    println!("[{status}] {:<20} {}", check.name, check.message);
+                }
+
+                if !report.warnings.is_empty() {
+                    println!();
+                    println!("Warnings:");
+                    for warning in &report.warnings {
+                        println!("- {warning}");
+                    }
+                }
+
+                println!();
+                println!(
+                    "Overall readiness: {}",
+                    if report.ready { "READY" } else { "NOT READY" }
+                );
             }
         }
 

@@ -22,6 +22,7 @@ pub mod blockstream_optimizer;
 pub mod config;
 pub mod config_autotuner;
 pub mod metrics;
+pub mod preflight;
 pub mod priority_fee;
 pub mod rpc_cache_layer;
 pub mod rpc_health;
