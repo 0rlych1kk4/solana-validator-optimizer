@@ -40,7 +40,6 @@ hyper = { version = "1", features = ["full"], optional = true }
 # Solana deps: aligned via workspace
 solana-client = { workspace = true }
 solana-sdk = { workspace = true }
-solana-ledger = { workspace = true }
 solana-commitment-config = { workspace = true }
 sysinfo = "0.37"
 
